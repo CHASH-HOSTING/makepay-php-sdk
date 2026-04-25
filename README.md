@@ -5,13 +5,8 @@ webhook verification.
 
 ## Install
 
-Until the package is published to Packagist, install from Git:
-
-```bash
-composer require makepay/makepay-php
-```
-
-or add the repository manually:
+Until the package is published to Packagist, install from the public Git
+repository:
 
 ```json
 {
@@ -25,6 +20,12 @@ or add the repository manually:
     "makepay/makepay-php": "^0.1"
   }
 }
+```
+
+Then run:
+
+```bash
+composer update makepay/makepay-php
 ```
 
 ## Configure
