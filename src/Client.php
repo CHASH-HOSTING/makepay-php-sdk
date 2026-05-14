@@ -7,9 +7,11 @@ namespace MakePay;
 final class Client
 {
     public const DEFAULT_BASE_URL = 'https://www.makecrypto.io';
+    public const DEFAULT_CHECKOUT_BASE_URL = 'https://makepay.io';
     public const VERSION = '0.1.0';
 
     private string $baseUrl;
+    private string $checkoutBaseUrl;
     private string $keyId;
     private string $keySecret;
     private bool $debug;
@@ -18,6 +20,7 @@ final class Client
     public function __construct(array $config = [])
     {
         $this->baseUrl = rtrim((string)($config['baseUrl'] ?? $config['base_url'] ?? self::DEFAULT_BASE_URL), '/');
+        $this->checkoutBaseUrl = rtrim((string)($config['checkoutBaseUrl'] ?? $config['checkout_base_url'] ?? self::DEFAULT_CHECKOUT_BASE_URL), '/');
         $this->keyId = (string)($config['keyId'] ?? $config['key_id'] ?? $config['apiKeyId'] ?? $config['api_key_id'] ?? '');
         $this->keySecret = (string)($config['keySecret'] ?? $config['key_secret'] ?? $config['apiKeySecret'] ?? $config['api_key_secret'] ?? '');
         $this->debug = (bool)($config['debug'] ?? false);
@@ -27,6 +30,13 @@ final class Client
     public function setBaseUrl(string $baseUrl): self
     {
         $this->baseUrl = rtrim($baseUrl, '/');
+
+        return $this;
+    }
+
+    public function setCheckoutBaseUrl(string $checkoutBaseUrl): self
+    {
+        $this->checkoutBaseUrl = rtrim($checkoutBaseUrl, '/');
 
         return $this;
     }
@@ -95,6 +105,62 @@ final class Client
     public function updateSettings(array $settings): array
     {
         return $this->request('PUT', '/api/partner/v1/makepay/settings', $settings);
+    }
+
+    public function hostedCheckoutUrl(string $uid): string
+    {
+        $this->assertNonEmpty($uid, 'Payment link UID is required.');
+
+        return $this->checkoutBaseUrl . '/payment/' . rawurlencode($uid);
+    }
+
+    public function embeddedCheckoutUrl(string $uid, array $options = []): string
+    {
+        $this->assertNonEmpty($uid, 'Payment link UID is required.');
+
+        $url = $this->checkoutBaseUrl . '/embed/payment/' . rawurlencode($uid);
+        $parentOrigin = isset($options['parentOrigin'])
+            ? (string) $options['parentOrigin']
+            : (string) ($options['parent_origin'] ?? '');
+
+        if ('' !== $parentOrigin) {
+            $url .= '?' . http_build_query(array('parentOrigin' => $parentOrigin), '', '&');
+        }
+
+        return $url;
+    }
+
+    public function modalScriptUrl(): string
+    {
+        return $this->checkoutBaseUrl . '/modal/makepay.js';
+    }
+
+    public function embedButtonHtml(string $uid, array $options = []): string
+    {
+        $this->assertNonEmpty($uid, 'Payment link UID is required.');
+
+        $buttonLabel = (string) ($options['buttonLabel'] ?? $options['button_label'] ?? 'Pay with crypto');
+
+        return implode("\n", array(
+            '<script src="' . $this->escapeHtmlAttribute($this->modalScriptUrl()) . '"></script>',
+            '<button type="button" data-makepay-payment-link="' . $this->escapeHtmlAttribute($uid) . '">',
+            '  ' . htmlspecialchars($buttonLabel, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+            '</button>',
+        ));
+    }
+
+    public function iframeHtml(string $uid, array $options = []): string
+    {
+        $title = (string) ($options['iframeTitle'] ?? $options['iframe_title'] ?? 'MakePay checkout');
+
+        return implode("\n", array(
+            '<iframe',
+            '  title="' . $this->escapeHtmlAttribute($title) . '"',
+            '  src="' . $this->escapeHtmlAttribute($this->embeddedCheckoutUrl($uid, $options)) . '"',
+            '  style="width:100%;min-height:720px;border:0;border-radius:12px;"',
+            '  allow="clipboard-read; clipboard-write"',
+            '></iframe>',
+        ));
     }
 
     public function verifyWebhook(string $rawBody, ?string $signatureHeader, string $secret, int $toleranceSeconds = 300): bool
@@ -217,5 +283,10 @@ final class Client
 
         $target = $this->logFile ?: './makepay.log';
         file_put_contents($target, '[' . gmdate('c') . '] ' . $line . PHP_EOL, FILE_APPEND);
+    }
+
+    private function escapeHtmlAttribute(string $value): string
+    {
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }

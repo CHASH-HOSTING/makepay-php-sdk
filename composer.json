@@ -2,8 +2,19 @@
   "name": "makepay/makepay-php",
   "description": "Official MakePay PHP SDK for payment links, settings, and webhook verification.",
   "type": "library",
-  "version": "0.1.0",
   "license": "MIT",
+  "homepage": "https://www.makecrypto.io/documentation/sdk/php",
+  "keywords": [
+    "makepay",
+    "makecrypto",
+    "crypto-payments",
+    "payment-links",
+    "webhooks"
+  ],
+  "support": {
+    "docs": "https://www.makecrypto.io/documentation/sdk/php",
+    "source": "https://github.com/makecryptoio/makepay-php-sdk"
+  },
   "require": {
     "php": ">=7.4",
     "ext-json": "*"

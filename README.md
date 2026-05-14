@@ -5,27 +5,10 @@ webhook verification.
 
 ## Install
 
-Until the package is published to Packagist, install from the public Git
-repository:
-
-```json
-{
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/CHASH-HOSTING/makepay-php-sdk"
-    }
-  ],
-  "require": {
-    "makepay/makepay-php": "^0.1"
-  }
-}
-```
-
-Then run:
+Install with Composer:
 
 ```bash
-composer update makepay/makepay-php
+composer require makepay/makepay-php
 ```
 
 ## Configure
@@ -38,6 +21,8 @@ use MakePay\Client;
 $makepay = new Client([
     'keyId' => getenv('MAKEPAY_KEY_ID'),
     'keySecret' => getenv('MAKEPAY_KEY_SECRET'),
+    // Optional: override only when MakePay gives you a custom checkout origin.
+    'checkoutBaseUrl' => 'https://makepay.io',
 ]);
 ```
 
@@ -58,6 +43,28 @@ $response = $makepay->createPaymentLink([
 ]);
 
 header('Location: ' . $response['paymentLink']['publicUrl']);
+```
+
+## Hosted And Embedded Checkout
+
+The SDK can generate hosted redirect URLs, embedded iframe URLs, and small HTML
+snippets after you create or receive a payment UID.
+
+```php
+$paymentUid = $response['paymentLink']['uid'];
+
+$hostedUrl = $makepay->hostedCheckoutUrl($paymentUid);
+$embedUrl = $makepay->embeddedCheckoutUrl($paymentUid, [
+    'parentOrigin' => 'https://merchant.example',
+]);
+
+echo $makepay->embedButtonHtml($paymentUid, [
+    'buttonLabel' => 'Pay with crypto',
+]);
+
+echo $makepay->iframeHtml($paymentUid, [
+    'iframeTitle' => 'Secure MakePay checkout',
+]);
 ```
 
 ## Read and update payment links
