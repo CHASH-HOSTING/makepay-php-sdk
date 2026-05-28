@@ -18,6 +18,31 @@ try {
         'description' => 'Checkout for order #1042',
         'amount' => '129.99',
         'currency' => 'USDT',
+        'lineItems' => [
+            [
+                'id' => 'plan',
+                'name' => 'Starter package',
+                'unitAmount' => '119.99',
+                'quantity' => 1,
+            ],
+        ],
+        'extraCharges' => [
+            [
+                'id' => 'shipping',
+                'name' => 'Shipping',
+                'kind' => 'shipping',
+                'unitAmount' => '10.00',
+                'quantity' => 1,
+            ],
+        ],
+        'optionalItems' => [
+            [
+                'id' => 'priority_setup',
+                'name' => 'Priority setup',
+                'unitAmount' => '19.99',
+                'quantity' => 1,
+            ],
+        ],
         'orderId' => 'order_1042',
         'customerEmail' => 'buyer@example.com',
         'returnUrl' => 'https://merchant.example/orders/1042',
